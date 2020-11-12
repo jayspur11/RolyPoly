@@ -35,13 +35,19 @@ class RolyPoly(discord.Client):
                 pass
 
     async def _remove_role(self, role_name, message):
-        pass
+        existing_role = await self._get_role_with_name(message.guild, role_name)
+        if existing_role:
+            await message.author.remove_roles(existing_role)
+            # TODO: add reaction to indicate this is done
+        else:
+            # TODO: send error message
+            pass
 
     async def _add_game(self, role_name, channel_name, message):
         creation_reason = "New game requested by {}".format(message.author.name)
         existing_role = await self._get_role_with_name(message.guild, role_name)
         if existing_role:
-            await message.author.add_roles(existing_role, reason=creation_reason)
+            await message.author.add_roles(existing_role)
         else:
             new_role = await message.guild.create_role(
                 name=role_name,
@@ -62,14 +68,12 @@ class RolyPoly(discord.Client):
                 reason=creation_reason)
 
             await message.guild.create_text_channel(name=channel_name,
-                                                    category=new_category,
-                                                    reason=creation_reason)
+                                                    category=new_category)
 
             await message.guild.create_voice_channel(name=role_name,
-                                                    category=new_category,
-                                                    reason=creation_reason)
+                                                    category=new_category)
 
-            await message.author.add_roles(new_role, reason=creation_reason)
+            await message.author.add_roles(new_role)
 
         # TODO: add reaction to indicate that this is done
 
