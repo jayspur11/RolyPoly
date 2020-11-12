@@ -1,6 +1,8 @@
 import discord
 import json
+import random
 import re
+
 
 class RolyPoly(discord.Client):
     async def on_ready(self):
@@ -21,15 +23,15 @@ class RolyPoly(discord.Client):
             channel_name = '-'.join(command[1:])
 
             if command[0] in ["join"]:
-                self._assign_role(role_name, message)
+                await self._assign_role(role_name, message)
             elif command[0] in ["remove", "leave"]:
-                self._remove_role(role_name, message)
+                await self._remove_role(role_name, message)
             elif command[0] in ["register", "add"]:
-                self._add_game(role_name, channel_name, message)
+                await self._add_game(role_name, channel_name, message)
             elif command[0] in ["games", "list"]:
-                self._list_games(message)
+                await self._list_games(message)
             elif command[0] in ["help"]:
-                self._help(message)
+                await self._help(message)
             else:
                 # TODO: send error message
                 pass
@@ -41,13 +43,55 @@ class RolyPoly(discord.Client):
         pass
 
     async def _add_game(self, role_name, channel_name, message):
-        pass
+        creation_reason = "New game requested by {}".format(message.author.name)
+        existing_role = await self._get_role_with_name(message.guild, role_name)
+        if existing_role:
+            await message.author.add_roles(existing_role, reason=creation_reason)
+            # TODO: send message about this
+            return
+
+        new_role = await message.guild.create_role(
+            name=role_name,
+            colour=discord.Colour.from_rgb(random.randint(0, 255),
+                                           random.randint(0, 255),
+                                           random.randint(0, 255)),
+            mentionable=True,
+            reason=creation_reason)
+
+        new_category = await message.guild.create_category(
+            name=role_name,
+            overwrites={
+                new_role:
+                discord.PermissionOverwrite(read_messages=True),
+                message.guild.default_role:
+                discord.PermissionOverwrite(read_messages=False)
+            },
+            reason=creation_reason)
+
+        await message.guild.create_text_channel(name=channel_name,
+                                                category=new_category,
+                                                reason=creation_reason)
+
+        await message.guild.create_voice_channel(name=role_name,
+                                                 category=new_category,
+                                                 reason=creation_reason)
+
+        await message.author.add_roles(new_role, reason=creation_reason)
+
+        # TODO: send message that this is done
 
     async def _list_games(self, message):
         pass
 
     async def _help(self, message):
         pass
+
+    async def _get_role_with_name(self, guild, role_name):
+        for role in guild.roles:
+            if role.name == role_name:
+                return role
+        return None
+
 
 if __name__ == "__main__":
     with open("auth.json", "r") as auth_file:
