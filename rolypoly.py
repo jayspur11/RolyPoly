@@ -22,22 +22,17 @@ class RolyPoly(discord.Client):
             role_name = ' '.join([word.capitalize() for word in command[1:]])
             channel_name = '-'.join(command[1:])
 
-            if command[0] in ["join"]:
-                await self._assign_role(role_name, message)
-            elif command[0] in ["remove", "leave"]:
-                await self._remove_role(role_name, message)
-            elif command[0] in ["register", "add"]:
+            if command[0] == "add":
                 await self._add_game(role_name, channel_name, message)
+            elif command[0] == "remove":
+                await self._remove_role(role_name, message)
             elif command[0] in ["games", "list"]:
                 await self._list_games(message)
-            elif command[0] in ["help"]:
+            elif command[0] == "help":
                 await self._help(message)
             else:
                 # TODO: send error message
                 pass
-
-    async def _assign_role(self, role_name, message):
-        pass
 
     async def _remove_role(self, role_name, message):
         pass
@@ -47,38 +42,36 @@ class RolyPoly(discord.Client):
         existing_role = await self._get_role_with_name(message.guild, role_name)
         if existing_role:
             await message.author.add_roles(existing_role, reason=creation_reason)
-            # TODO: send message about this
-            return
+        else:
+            new_role = await message.guild.create_role(
+                name=role_name,
+                colour=discord.Colour.from_rgb(random.randint(0, 255),
+                                            random.randint(0, 255),
+                                            random.randint(0, 255)),
+                mentionable=True,
+                reason=creation_reason)
 
-        new_role = await message.guild.create_role(
-            name=role_name,
-            colour=discord.Colour.from_rgb(random.randint(0, 255),
-                                           random.randint(0, 255),
-                                           random.randint(0, 255)),
-            mentionable=True,
-            reason=creation_reason)
+            new_category = await message.guild.create_category(
+                name=role_name,
+                overwrites={
+                    new_role:
+                    discord.PermissionOverwrite(read_messages=True),
+                    message.guild.default_role:
+                    discord.PermissionOverwrite(read_messages=False)
+                },
+                reason=creation_reason)
 
-        new_category = await message.guild.create_category(
-            name=role_name,
-            overwrites={
-                new_role:
-                discord.PermissionOverwrite(read_messages=True),
-                message.guild.default_role:
-                discord.PermissionOverwrite(read_messages=False)
-            },
-            reason=creation_reason)
+            await message.guild.create_text_channel(name=channel_name,
+                                                    category=new_category,
+                                                    reason=creation_reason)
 
-        await message.guild.create_text_channel(name=channel_name,
-                                                category=new_category,
-                                                reason=creation_reason)
+            await message.guild.create_voice_channel(name=role_name,
+                                                    category=new_category,
+                                                    reason=creation_reason)
 
-        await message.guild.create_voice_channel(name=role_name,
-                                                 category=new_category,
-                                                 reason=creation_reason)
+            await message.author.add_roles(new_role, reason=creation_reason)
 
-        await message.author.add_roles(new_role, reason=creation_reason)
-
-        # TODO: send message that this is done
+        # TODO: add reaction to indicate that this is done
 
     async def _list_games(self, message):
         pass
