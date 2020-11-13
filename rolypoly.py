@@ -28,21 +28,17 @@ class RolyPoly(discord.Client):
                 await self._remove_role(cat_name, message)
             elif command[0] in ["games", "list"]:
                 await self._list_games(message)
-            elif command[0] == "help":
-                await self._help(message)
             else:
-                # TODO: send error message
-                pass
+                self._help(message)
 
     async def _remove_role(self, cat_name, message):
         existing_role = await self._get_role_with_name(
             message.guild, self._role_for_category(cat_name))
         if existing_role:
             await message.author.remove_roles(existing_role)
-            # TODO: add reaction to indicate this is done
+            await message.add_reaction("👋")
         else:
-            # TODO: send error message
-            pass
+            await message.channel.send("Could not find that role.")
 
     async def _add_game(self, cat_name, channel_name, message):
         creation_reason = "New game requested by {}".format(
@@ -79,7 +75,7 @@ class RolyPoly(discord.Client):
 
             await message.author.add_roles(new_role)
 
-        # TODO: add reaction to indicate that this is done
+        await message.add_reaction("✔")
 
     async def _list_games(self, message):
         games = []
@@ -88,15 +84,24 @@ class RolyPoly(discord.Client):
                 games.append(role.name[:-1])
 
         if not games:
-            # TODO: send a message about how there are no games
-            pass
+            await message.channel.send(
+                "No games have been added to this server yet!")
         else:
             await message.channel.send(
                 "Here are the games I know about:\n\n{}".format('\n'.join(games))
             )
 
     async def _help(self, message):
-        pass
+        await message.channel.send(
+            "Here are the things you can ask me to do:\n"
+            "`join Game Name` -- join the group for *Game Name*, gaining access"
+            " to its channels.\n"
+            "`leave Game Name` -- leave the group for *Game Name*, hiding the"
+            " channels from your view.\n"
+            "`list` -- show the games that other people have joined on this"
+            " server. You don't have to stick to this list! If you ask for a"
+            " game that's not here, I'll set up a new group for you."
+        )
 
     async def _get_role_with_name(self, guild, role_name):
         for role in guild.roles:
@@ -105,6 +110,8 @@ class RolyPoly(discord.Client):
         return None
 
     def _role_for_category(self, cat_name):
+        # The actual role has a nonprinting character at the end, so we can
+        # identify which roles we've added just through the roles list.
         return cat_name + u"\u200B"
 
 
