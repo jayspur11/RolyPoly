@@ -44,8 +44,7 @@ class RolyPoly(discord.Client):
         creation_reason = "New game requested by {}".format(
             message.author.name)
         role_name = self._role_for_category(cat_name)
-        existing_role = self._get_role_with_name(message.guild,
-                                                       role_name)
+        existing_role = self._get_role_with_name(message.guild, role_name)
         if existing_role:
             await message.author.add_roles(existing_role)
         else:
@@ -88,8 +87,8 @@ class RolyPoly(discord.Client):
                 "No games have been added to this server yet!")
         else:
             await message.channel.send(
-                "Here are the games I know about:\n\n{}".format('\n'.join(games))
-            )
+                "Here are the games I know about:\n\n{}".format(
+                    '\n'.join(games)))
 
     async def _help(self, message):
         await message.channel.send(
@@ -100,8 +99,7 @@ class RolyPoly(discord.Client):
             " channels from your view.\n"
             "`list` -- show the games that other people have joined on this"
             " server. You don't have to stick to this list! If you ask for a"
-            " game that's not here, I'll set up a new group for you."
-        )
+            " game that's not here, I'll set up a new group for you.")
 
     def _get_role_with_name(self, guild, role_name):
         for role in guild.roles:
