@@ -29,7 +29,7 @@ class RolyPoly(discord.Client):
             elif command[0] in ["games", "list"]:
                 await self._list_games(message)
             else:
-                self._help(message)
+                await self._help(message)
 
     async def _remove_role(self, cat_name, message):
         existing_role = self._get_role_with_name(
@@ -81,6 +81,7 @@ class RolyPoly(discord.Client):
         for role in message.guild.roles:
             if role.name[-1] == u"\u200B":
                 games.append(role.name[:-1])
+        games.sort()
 
         if not games:
             await message.channel.send(
