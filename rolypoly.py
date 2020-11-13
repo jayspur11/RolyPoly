@@ -60,7 +60,18 @@ class RolyPoly(discord.Client):
                 name=cat_name,
                 overwrites={
                     new_role:
-                    discord.PermissionOverwrite(read_messages=True),
+                    discord.PermissionOverwrite(read_messages=True,
+                                                send_messages=True,
+                                                embed_links=True,
+                                                attach_files=True,
+                                                read_message_history=True,
+                                                mention_everyone=True,
+                                                external_emojis=True,
+                                                add_reactions=True,
+                                                connect=True,
+                                                speak=True,
+                                                stream=True,
+                                                use_voice_activation=True),
                     message.guild.default_role:
                     discord.PermissionOverwrite(read_messages=False)
                 },
