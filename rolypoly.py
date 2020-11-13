@@ -32,7 +32,7 @@ class RolyPoly(discord.Client):
                 self._help(message)
 
     async def _remove_role(self, cat_name, message):
-        existing_role = await self._get_role_with_name(
+        existing_role = self._get_role_with_name(
             message.guild, self._role_for_category(cat_name))
         if existing_role:
             await message.author.remove_roles(existing_role)
@@ -44,7 +44,7 @@ class RolyPoly(discord.Client):
         creation_reason = "New game requested by {}".format(
             message.author.name)
         role_name = self._role_for_category(cat_name)
-        existing_role = await self._get_role_with_name(message.guild,
+        existing_role = self._get_role_with_name(message.guild,
                                                        role_name)
         if existing_role:
             await message.author.add_roles(existing_role)
@@ -103,7 +103,7 @@ class RolyPoly(discord.Client):
             " game that's not here, I'll set up a new group for you."
         )
 
-    async def _get_role_with_name(self, guild, role_name):
+    def _get_role_with_name(self, guild, role_name):
         for role in guild.roles:
             if role.name == role_name:
                 return role
