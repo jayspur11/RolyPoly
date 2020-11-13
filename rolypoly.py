@@ -75,7 +75,7 @@ class RolyPoly(discord.Client):
 
             await message.author.add_roles(new_role)
 
-        await message.add_reaction("✔")
+        await message.add_reaction("🙌")
 
     async def _list_games(self, message):
         games = []
