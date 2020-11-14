@@ -83,6 +83,10 @@ class RolyPoly(discord.Client):
             else:
                 await self._help(message)
 
+    async def on_raw_reaction_add(self, payload):
+        # TODO: respond to the reaction, if it's on a catalog message
+        pass
+
     async def _remove_role(self, cat_name, message):
         existing_role = self._get_role_with_name(
             message.guild, self._role_for_category(cat_name))
