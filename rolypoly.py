@@ -38,6 +38,16 @@ async def build_new_group(guild, role_name, creation_reason, cat_name,
     await guild.create_text_channel(name=channel_name, category=new_cat)
     await guild.create_voice_channel(name=cat_name, category=new_cat)
     await author.add_roles(new_role)
+    catalog_channel = await get_catalog_channel(guild)
+    new_game_message = await catalog_channel.send(cat_name)
+    await new_game_message.add_reaction("❤")
+
+
+async def get_catalog_channel(guild):
+    for channel in guild.channels:
+        if channel.name == "game-catalog" and not channel.category:
+            return channel
+    return await guild.create_text_channel(name="game-catalog")
 
 
 class RolyPoly(discord.Client):
