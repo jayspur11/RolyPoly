@@ -47,7 +47,13 @@ async def get_catalog_channel(guild):
     for channel in guild.channels:
         if channel.name == "game-catalog" and not channel.category:
             return channel
-    return await guild.create_text_channel(name="game-catalog")
+    return await guild.create_text_channel(name="game-catalog",
+                                           overwrites={
+                                               guild.default_role:
+                                               discord.PermissionOverwrite(
+                                                   read_messages=True,
+                                                   send_messages=False)
+                                           })
 
 
 class RolyPoly(discord.Client):
