@@ -87,6 +87,19 @@ class RolyPoly(discord.Client):
 
         await message.add_reaction("🙌")
 
+    async def _delete_game(self, message):
+        cat_name = ' '.join(
+            [word.capitalize() for word in message.channel.name.split('-')])
+        role_name = self._role_for_category(cat_name)
+        existing_role = self._get_role_with_name(message.guild, role_name)
+        if not existing_role:
+            message.channel.send(
+                "Please request deletion from within the group.")
+            return
+        
+        await existing_role.delete()
+        # TODO: delete channels within category, and the category itself
+
     async def _list_games(self, message):
         games = []
         for role in message.guild.roles:
