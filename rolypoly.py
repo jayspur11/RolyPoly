@@ -10,7 +10,7 @@ class RolyPoly(discord.Client):
 
     async def on_message(self, message):
         # Ignore messages not directed at the bot.
-        if not self.user.mentioned_in(message):
+        if not self.user in message.mentions:
             return
 
         with message.channel.typing():
