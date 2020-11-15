@@ -22,6 +22,12 @@ class RolyPoly(discord.Client):
             cat_name = ' '.join([word.capitalize() for word in command[1:]])
             channel_name = '-'.join(command[1:])
 
+            if message.author == message.guild.owner:
+                # Owner-only commands
+                if command[0] == "delete":
+                    await self._delete_game(message)
+                    return
+
             if command[0] in ["add", "join"]:
                 await self._add_game(cat_name, channel_name, message)
             elif command[0] in ["remove", "leave"]:
@@ -87,6 +93,22 @@ class RolyPoly(discord.Client):
 
         await message.add_reaction("🙌")
 
+    async def _delete_game(self, message):
+        cat_name = ' '.join(
+            [word.capitalize() for word in message.channel.name.split('-')])
+        role_name = self._role_for_category(cat_name)
+        existing_role = self._get_role_with_name(message.guild, role_name)
+        if not existing_role:
+            await message.channel.send(
+                "Please request deletion from within the group.")
+            return
+        
+        await existing_role.delete()
+        existing_category = message.channel.category
+        for channel in existing_category.channels:
+            await channel.delete()
+        await existing_category.delete()
+
     async def _list_games(self, message):
         games = []
         for role in message.guild.roles:
@@ -128,5 +150,10 @@ class RolyPoly(discord.Client):
 if __name__ == "__main__":
     with open("auth.json", "r") as auth_file:
         auth = json.load(auth_file)
-    bot = RolyPoly()
+    intents = discord.Intents.none()
+    intents.guilds = True
+    intents.members = True
+    intents.guild_messages = True
+    intents.guild_reactions = True
+    bot = RolyPoly(intents=intents)
     bot.run(auth["discord-token"])
