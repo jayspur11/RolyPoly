@@ -34,8 +34,25 @@ class RolyPoly(discord.Client):
                 await self._remove_role(cat_name, message)
             elif command[0] in ["games", "list"]:
                 await self._list_games(message)
+            elif command[0] in ["voice"]:
+                await self._add_voice(message)
             else:
                 await self._help(message)
+
+    async def _add_voice(self, message):
+        category = message.channel.category
+        if not category:
+            await message.channel.send(
+                "Please request a new voice channel from the corresponding "
+                "text channel."
+            )
+            return
+
+        new_voice = await message.guild.create_voice_channel(
+            name="{category} {number}".format(category=category.name,
+                                              number=len(category.channels)),
+            category=category)
+        await message.channel.send("Created {}!".format(new_voice.name))
 
     async def _remove_role(self, cat_name, message):
         existing_role = self._get_role_with_name(
@@ -133,7 +150,9 @@ class RolyPoly(discord.Client):
             " channels from your view.\n"
             "`list` -- show the games that other people have joined on this"
             " server. You don't have to stick to this list! If you ask for a"
-            " game that's not here, I'll set up a new group for you.")
+            " game that's not here, I'll set up a new group for you.\n"
+            "`voice` -- add another voice channel for a game. Must be requested"
+            " from that game's text channel.")
 
     def _get_role_with_name(self, guild, role_name):
         for role in guild.roles:
