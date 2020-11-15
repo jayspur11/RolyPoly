@@ -22,6 +22,12 @@ class RolyPoly(discord.Client):
             cat_name = ' '.join([word.capitalize() for word in command[1:]])
             channel_name = '-'.join(command[1:])
 
+            if message.author.id == message.guild.owner_id:
+                # Owner-only commands
+                if command[0] == "delete":
+                    await self._delete_game(message)
+                    return
+
             if command[0] in ["add", "join"]:
                 await self._add_game(cat_name, channel_name, message)
             elif command[0] in ["remove", "leave"]:
@@ -93,7 +99,7 @@ class RolyPoly(discord.Client):
         role_name = self._role_for_category(cat_name)
         existing_role = self._get_role_with_name(message.guild, role_name)
         if not existing_role:
-            message.channel.send(
+            await message.channel.send(
                 "Please request deletion from within the group.")
             return
         
