@@ -89,7 +89,7 @@ class RolyPoly(discord.Client):
     async def on_raw_reaction_add(self, payload):
         channel = self.get_channel(payload.channel_id)
         if (channel.name != _CATALOG_CHANNEL_NAME
-                or payload.event_type != "REACTION_ADD"):
+                or channel.category is not None):
             return
 
         message = await channel.fetch_message(payload.message_id)
@@ -98,6 +98,8 @@ class RolyPoly(discord.Client):
 
         role = self._get_role_with_name(
             message.guild, self._role_for_category(message.content))
+        if not role:
+            return
         await payload.member.add_roles(role)
 
     async def _remove_role(self, cat_name, message):
