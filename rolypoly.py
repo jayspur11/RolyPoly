@@ -22,7 +22,7 @@ class RolyPoly(discord.Client):
             cat_name = ' '.join([word.capitalize() for word in command[1:]])
             channel_name = '-'.join(command[1:])
 
-            if message.author.id == message.guild.owner_id:
+            if message.author == message.guild.owner:
                 # Owner-only commands
                 if command[0] == "delete":
                     await self._delete_game(message)
@@ -150,5 +150,10 @@ class RolyPoly(discord.Client):
 if __name__ == "__main__":
     with open("auth.json", "r") as auth_file:
         auth = json.load(auth_file)
-    bot = RolyPoly()
+    intents = discord.Intents.none()
+    intents.guilds = True
+    intents.members = True
+    intents.guild_messages = True
+    intents.guild_reactions = True
+    bot = RolyPoly(intents=intents)
     bot.run(auth["discord-token"])
