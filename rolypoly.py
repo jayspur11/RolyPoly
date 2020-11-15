@@ -4,6 +4,61 @@ import random
 import re
 
 
+_CATALOG_CHANNEL_NAME = "game-catalog"
+
+
+async def build_new_group(guild, role_name, creation_reason, cat_name,
+                          channel_name, author):
+    new_role = await guild.create_role(name=role_name,
+                                       colour=discord.Colour.from_rgb(
+                                           random.randint(0, 255),
+                                           random.randint(0, 255),
+                                           random.randint(0, 255)),
+                                       mentionable=True,
+                                       reason=creation_reason)
+
+    new_cat = await guild.create_category(
+        name=cat_name,
+        overwrites={
+            new_role:
+            discord.PermissionOverwrite(read_messages=True,
+                                        send_messages=True,
+                                        embed_links=True,
+                                        attach_files=True,
+                                        read_message_history=True,
+                                        mention_everyone=True,
+                                        external_emojis=True,
+                                        add_reactions=True,
+                                        connect=True,
+                                        speak=True,
+                                        stream=True,
+                                        use_voice_activation=True),
+            guild.default_role:
+            discord.PermissionOverwrite(read_messages=False)
+        },
+        reason=creation_reason)
+
+    await guild.create_text_channel(name=channel_name, category=new_cat)
+    await guild.create_voice_channel(name=cat_name, category=new_cat)
+    await author.add_roles(new_role)
+    catalog_channel = await get_catalog_channel(guild)
+    new_game_message = await catalog_channel.send(cat_name)
+    await new_game_message.add_reaction("❤")
+
+
+async def get_catalog_channel(guild):
+    for channel in guild.channels:
+        if channel.name == _CATALOG_CHANNEL_NAME and not channel.category:
+            return channel
+    return await guild.create_text_channel(name=_CATALOG_CHANNEL_NAME,
+                                           overwrites={
+                                               guild.default_role:
+                                               discord.PermissionOverwrite(
+                                                   read_messages=True,
+                                                   send_messages=False)
+                                           })
+
+
 class RolyPoly(discord.Client):
     async def on_ready(self):
         print("RolyPoly reporting for duty!")
@@ -39,6 +94,22 @@ class RolyPoly(discord.Client):
             else:
                 await self._help(message)
 
+    async def on_raw_reaction_add(self, payload):
+        channel = self.get_channel(payload.channel_id)
+        if (channel.name != _CATALOG_CHANNEL_NAME
+                or channel.category is not None):
+            return
+
+        message = await channel.fetch_message(payload.message_id)
+        if message.author != self.user:
+            return
+
+        role = self._get_role_with_name(
+            message.guild, self._role_for_category(message.content))
+        if not role:
+            return
+        await payload.member.add_roles(role)
+
     async def _add_voice(self, message):
         category = message.channel.category
         if not category:
@@ -71,42 +142,8 @@ class RolyPoly(discord.Client):
         if existing_role:
             await message.author.add_roles(existing_role)
         else:
-            new_role = await message.guild.create_role(
-                name=role_name,
-                colour=discord.Colour.from_rgb(random.randint(0, 255),
-                                               random.randint(0, 255),
-                                               random.randint(0, 255)),
-                mentionable=True,
-                reason=creation_reason)
-
-            new_category = await message.guild.create_category(
-                name=cat_name,
-                overwrites={
-                    new_role:
-                    discord.PermissionOverwrite(read_messages=True,
-                                                send_messages=True,
-                                                embed_links=True,
-                                                attach_files=True,
-                                                read_message_history=True,
-                                                mention_everyone=True,
-                                                external_emojis=True,
-                                                add_reactions=True,
-                                                connect=True,
-                                                speak=True,
-                                                stream=True,
-                                                use_voice_activation=True),
-                    message.guild.default_role:
-                    discord.PermissionOverwrite(read_messages=False)
-                },
-                reason=creation_reason)
-
-            await message.guild.create_text_channel(name=channel_name,
-                                                    category=new_category)
-
-            await message.guild.create_voice_channel(name=cat_name,
-                                                     category=new_category)
-
-            await message.author.add_roles(new_role)
+            await build_new_group(message.guild, role_name, creation_reason,
+                                  cat_name, channel_name, message.author)
 
         await message.add_reaction("🙌")
 
