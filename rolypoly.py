@@ -4,6 +4,9 @@ import random
 import re
 
 
+_CATALOG_CHANNEL_NAME = "game-catalog"
+
+
 async def build_new_group(guild, role_name, creation_reason, cat_name,
                           channel_name, author):
     new_role = await guild.create_role(name=role_name,
@@ -45,9 +48,9 @@ async def build_new_group(guild, role_name, creation_reason, cat_name,
 
 async def get_catalog_channel(guild):
     for channel in guild.channels:
-        if channel.name == "game-catalog" and not channel.category:
+        if channel.name == _CATALOG_CHANNEL_NAME and not channel.category:
             return channel
-    return await guild.create_text_channel(name="game-catalog",
+    return await guild.create_text_channel(name=_CATALOG_CHANNEL_NAME,
                                            overwrites={
                                                guild.default_role:
                                                discord.PermissionOverwrite(
@@ -84,8 +87,18 @@ class RolyPoly(discord.Client):
                 await self._help(message)
 
     async def on_raw_reaction_add(self, payload):
-        # TODO: respond to the reaction, if it's on a catalog message
-        pass
+        channel = self.get_channel(payload.channel_id)
+        if (channel.name != _CATALOG_CHANNEL_NAME
+                or payload.event_type != "REACTION_ADD"):
+            return
+
+        message = await channel.fetch_message(payload.message_id)
+        if message.author != self.user:
+            return
+
+        role = self._get_role_with_name(
+            message.guild, self._role_for_category(message.content))
+        await payload.member.add_roles(role)
 
     async def _remove_role(self, cat_name, message):
         existing_role = self._get_role_with_name(
