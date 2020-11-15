@@ -128,7 +128,9 @@ class RolyPoly(discord.Client):
             " channels from your view.\n"
             "`list` -- show the games that other people have joined on this"
             " server. You don't have to stick to this list! If you ask for a"
-            " game that's not here, I'll set up a new group for you.")
+            " game that's not here, I'll set up a new group for you.\n"
+            "`voice` -- add another voice channel for a game. Must be requested"
+            " from that game's text channel.")
 
     def _get_role_with_name(self, guild, role_name):
         for role in guild.roles:
