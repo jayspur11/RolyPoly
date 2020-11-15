@@ -98,7 +98,10 @@ class RolyPoly(discord.Client):
             return
         
         await existing_role.delete()
-        # TODO: delete channels within category, and the category itself
+        existing_category = message.channel.category
+        for channel in existing_category.channels:
+            await channel.delete()
+        await existing_category.delete()
 
     async def _list_games(self, message):
         games = []
