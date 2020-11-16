@@ -123,7 +123,8 @@ class RolyPoly(discord.Client):
     async def on_raw_reaction_add(self, payload):
         channel = self.get_channel(payload.channel_id)
         if (channel.name != _CATALOG_CHANNEL_NAME
-                or channel.category is not None):
+                or channel.category is not None
+                or payload.member == self.user):
             return
 
         message = await channel.fetch_message(payload.message_id)
