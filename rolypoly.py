@@ -189,6 +189,8 @@ class RolyPoly(discord.Client):
         for channel in existing_category.channels:
             await channel.delete()
         await existing_category.delete()
+        catalog = await get_catalog_channel(message.guild)
+        await catalog.purge(check=(lambda msg: msg.content == cat_name))
 
     async def _list_games(self, message):
         games = get_games(message.guild)
