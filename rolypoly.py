@@ -81,6 +81,14 @@ async def update_games(guild):
             await add_to_catalog(game, catalog)
 
 
+def get_text_channel_for_game(guild, cat_name, channel_name):
+    for category in guild.categories:
+        if category.name == cat_name:
+            for text_channel in category.text_channels:
+                if text_channel.name == channel_name:
+                    return text_channel
+
+
 class RolyPoly(discord.Client):
     async def on_ready(self):
         print("RolyPoly reporting for duty!")
@@ -167,12 +175,18 @@ class RolyPoly(discord.Client):
         role_name = self._role_for_category(cat_name)
         existing_role = self._get_role_with_name(message.guild, role_name)
         if existing_role:
+            if existing_role in message.author.roles:
+                await message.delete()
+                return
             await message.author.add_roles(existing_role)
         else:
             await build_new_group(message.guild, role_name, creation_reason,
                                   cat_name, channel_name, message.author)
 
-        await message.add_reaction("🙌")
+        await get_text_channel_for_game(
+            message.guild, cat_name,
+            channel_name).send("Welcome, {}!".format(message.author.mention))
+        await message.delete()
 
     async def _delete_game(self, message):
         cat_name = ' '.join(
@@ -183,7 +197,7 @@ class RolyPoly(discord.Client):
             await message.channel.send(
                 "Please request deletion from within the group.")
             return
-        
+
         await existing_role.delete()
         existing_category = message.channel.category
         for channel in existing_category.channels:
