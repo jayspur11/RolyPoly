@@ -7,6 +7,11 @@ import re
 _CATALOG_CHANNEL_NAME = "game-catalog"
 
 
+async def add_to_catalog(game, catalog):
+    new_game_message = await catalog.send(game)
+    await new_game_message.add_reaction("❤")
+
+
 async def build_new_group(guild, role_name, creation_reason, cat_name,
                           channel_name, author):
     new_role = await guild.create_role(name=role_name,
@@ -42,8 +47,7 @@ async def build_new_group(guild, role_name, creation_reason, cat_name,
     await guild.create_voice_channel(name=cat_name, category=new_cat)
     await author.add_roles(new_role)
     catalog_channel = await get_catalog_channel(guild)
-    new_game_message = await catalog_channel.send(cat_name)
-    await new_game_message.add_reaction("❤")
+    await add_to_catalog(cat_name, catalog_channel)
 
 
 async def get_catalog_channel(guild):
@@ -57,6 +61,24 @@ async def get_catalog_channel(guild):
                                                    read_messages=True,
                                                    send_messages=False)
                                            })
+
+
+def get_games(guild):
+    games = []
+    for role in guild.roles:
+        if role.name[-1] == u"\u200B":
+            games.append(role.name[:-1])
+    return games
+
+
+async def update_games(guild):
+    catalog = await get_catalog_channel(guild)
+    existing_games = set()
+    async for message in catalog.history():
+        existing_games.add(message.content)
+    for game in get_games(guild):
+        if game not in existing_games:
+            await add_to_catalog(game, catalog)
 
 
 class RolyPoly(discord.Client):
@@ -81,6 +103,10 @@ class RolyPoly(discord.Client):
                 # Owner-only commands
                 if command[0] == "delete":
                     await self._delete_game(message)
+                    return
+                elif command[0] == "update":
+                    await update_games(message.guild)
+                    await message.channel.send("Done!")
                     return
 
             if command[0] in ["add", "join"]:
@@ -164,10 +190,7 @@ class RolyPoly(discord.Client):
         await existing_category.delete()
 
     async def _list_games(self, message):
-        games = []
-        for role in message.guild.roles:
-            if role.name[-1] == u"\u200B":
-                games.append(role.name[:-1])
+        games = get_games(message.guild)
         games.sort()
 
         if not games:
